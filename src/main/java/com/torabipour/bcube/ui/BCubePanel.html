@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--
+Copyright 2020 mohammad.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+    <wicket:panel>
+        <form wicket:id="form">
+            <div wicket:id="feedback"></div>
+            
+            <div class="container">
+                <h3 style="margin-top: 1vh">BCube Network Topology</h3>
+                <div style="display: flex; flex-direction: row; margin-top: 1vh">
+                    <span class="control-label" style="left: auto">k: </span>
+                    <input type="text" class="form-control col-md-3" style="margin-right: 1vw" wicket:id="kField"/>
+                    <span style="margin-left: 1vw" class="control-label" >n: </span>
+                    <input style="margin-left: 1vw" type="text" class="form-control col-md-3" wicket:id="nField"/>
+                    <button style="margin-left: 1vw" class="btn btn-primary" wicket:id="showGraph">Show Graph</button>
+                    <button style="margin-left: 1vw" class="btn btn-warning" wicket:id="downloadFile">Download Adjacency List</button>
+                </div>
+                <div wicket:id="graph" style="margin-top: 2vh"></div>
+            </div>
+
+        </form>
+    </wicket:panel>
+</body>
+</html>
