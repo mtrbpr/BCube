@@ -84,6 +84,8 @@ public class BCubePanel extends Panel {
         graphPanel.setVisible(false);
         form.add(graphPanel);
 
+        form.add(new EmptyPanel("bcubeInfo"));
+
         form.add(new TextField("kField", new IModel<String>() {
             @Override
             public void detach() {
@@ -134,6 +136,7 @@ public class BCubePanel extends Panel {
                 }
 
                 BCube bcube = new BCube(k, n);
+                form.addOrReplace(new BCubeInfoPanel("bcubeInfo", bcube));
                 graphPanel.setVisible(true);
                 graphPanel.renderGraph(target, bcube.generateVisGraph());
                 target.add(form);
@@ -171,15 +174,16 @@ public class BCubePanel extends Panel {
             }
         };
         download.setLocation(AjaxDownloadBehavior.Location.Blob);
-        
+
         form.add(download);
-        
 
         form.add(new AjaxButton("generateFile") {
             @Override
             protected void onSubmit(AjaxRequestTarget target) {
                 try {
+                    validateInput(target);
                     download.initiate(target);
+                    form.addOrReplace(new BCubeInfoPanel("bcubeInfo", new BCube(k, n)));
                     success("File successfully created!");
                 } catch (Exception ex) {
                     error("Unexpected error occurred");
@@ -192,12 +196,12 @@ public class BCubePanel extends Panel {
     }
 
     private void validateInput(AjaxRequestTarget target) {
-        if (k == 0) {
+        if (k <= 0) {
             feedback.error("parameter k is not set properly");
             target.add(form);
             throw new IllegalArgumentException();
         }
-        if (n == 0) {
+        if (n <= 0) {
             feedback.error("parameter n is not set properly");
             target.add(form);
             throw new IllegalArgumentException();
