@@ -44,6 +44,7 @@ public class BCube {
     private int numOfLevels;
     private int numOfLinks;
     private int numOfBCubes;
+    private int numOfNodes;
     private Graph<BCubeNode> graph;
     private int numOfSwitchesPerLevel;
     private List<BCubeNode> serverNodes;
@@ -60,6 +61,7 @@ public class BCube {
         this.numOfBCubes = (int) Math.pow(n, k);
         this.numOfSwitches = (int) ((k + 1) * Math.pow(n, k));
         this.numOfLinks = (int) ((k + 1) * Math.pow(n, k + 1));
+        this.numOfNodes = numOfServers + numOfSwitches;
     }
 
     public VisGraph generateVisGraph() {
@@ -73,11 +75,16 @@ public class BCube {
         return graphGenerator.generateGraph();
     }
 
+    public File generateAdjacencyFile() throws IOException {
+        return new BCubeAdjacencyFileGenerator(this).getFile();
+    }
+
+    @Deprecated
     public File generateAdjFile() throws IOException {
         if (file == null) {
             file = new File("adjacency.txt");
             FileWriter writer = new FileWriter("adjacency.txt");
-            writer.write(this.toString());
+            writer.write(this.getAdjacencyString());
             writer.close();
         }
         return file;
@@ -210,8 +217,7 @@ public class BCube {
         return numOfSwitchesPerLevel;
     }
 
-    @Override
-    public String toString() {
+    public String getAdjacencyString() {
         StringBuilder sb = new StringBuilder();
 
         if (graph == null) {
@@ -236,6 +242,10 @@ public class BCube {
             }
         }
         return sb.toString();
+    }
+
+    public int getNumOfNodes() {
+        return numOfNodes;
     }
 
 }

@@ -18,8 +18,13 @@ package com.torabipour.bcube.ui;
 import com.torabipour.bcube.BCube;
 import com.torabipour.vis.VisGraphPanel;
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
@@ -30,15 +35,27 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.request.Response;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import org.apache.wicket.extensions.ajax.AjaxDownloadBehavior;
+import org.apache.wicket.request.http.flow.AbortWithHttpErrorCodeException;
+import org.apache.wicket.request.resource.IResource;
+import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.request.resource.ResourceStreamResource;
+import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.StringResourceStream;
+import org.apache.wicket.util.time.Duration;
 
 /**
  *
  * @author Mohammad TRB
  */
 public class BCubePanel extends Panel {
-    
+
     @Override
     public void renderHead(IHeaderResponse response) {
         response.render(JavaScriptReferenceHeaderItem.forReference(new JavaScriptResourceReference(BCubePanel.class, "bootstrap.min.js")));
@@ -50,6 +67,7 @@ public class BCubePanel extends Panel {
     private FeedbackPanel feedback;
     private Form form;
     private VisGraphPanel graphPanel;
+    private File file;
 
     public BCubePanel(String id) {
         super(id);
@@ -120,27 +138,56 @@ public class BCubePanel extends Panel {
                 graphPanel.renderGraph(target, bcube.generateVisGraph());
                 target.add(form);
             }
-        });
+        }.setOutputMarkupId(true));
 
-        form.add(new DownloadLink("downloadFile", new IModel<File>(){
+        FileResource fileResource = new FileResource() {
             @Override
-            public void detach() {
-            }
-
-            @Override
-            public void setObject(File object) {
-            }
-
-            @Override
-            public File getObject() {
+            protected File getFile() {
                 try {
-                    return new BCube(k, n).generateAdjFile();
-                } catch (Exception ex) {
-                    return new File("adjacency.txt");
+                    return new BCube(k, n).generateAdjacencyFile();
+                } catch (IOException ex) {
+                    return null;
                 }
             }
-            
-        }, "adjacency.txt"));
+        };
+
+        final AjaxDownloadBehavior download = new AjaxDownloadBehavior(fileResource) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onBeforeDownload(IPartialPageRequestHandler handler) {
+            }
+
+            @Override
+            protected void onDownloadSuccess(AjaxRequestTarget target) {
+            }
+
+            @Override
+            protected void onDownloadFailed(AjaxRequestTarget target) {
+            }
+
+            @Override
+            protected void onDownloadCompleted(AjaxRequestTarget target) {
+            }
+        };
+        download.setLocation(AjaxDownloadBehavior.Location.Blob);
+        
+        form.add(download);
+        
+
+        form.add(new AjaxButton("generateFile") {
+            @Override
+            protected void onSubmit(AjaxRequestTarget target) {
+                try {
+                    download.initiate(target);
+                    success("File successfully created!");
+                } catch (Exception ex) {
+                    error("Unexpected error occurred");
+                } finally {
+                    target.add(form);
+                }
+            }
+        }.setOutputMarkupId(true));
 
     }
 
@@ -155,5 +202,37 @@ public class BCubePanel extends Panel {
             target.add(form);
             throw new IllegalArgumentException();
         }
+    }
+
+    private abstract class FileResource extends ResourceStreamResource {
+
+        private static final long serialVersionUID = 1L;
+
+        private int count = 0;
+
+        public FileResource() {
+
+            setFileName("File-from-IResource.txt");
+            setCacheDuration(Duration.NONE);
+        }
+
+        @Override
+        protected IResourceStream getResourceStream(Attributes attributes) {
+            // simulate delay
+            try {
+                TimeUnit.MILLISECONDS.sleep(3000);
+            } catch (InterruptedException e) {
+            }
+
+            count++;
+            if (count == 3) {
+                count = 0;
+                throw new AbortWithHttpErrorCodeException(400);
+            }
+
+            return new FileResourceStream(getFile());
+        }
+
+        protected abstract File getFile();
     }
 }
